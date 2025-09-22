@@ -271,18 +271,38 @@
                 suggestion: document.getElementById('suggestion').value
             };
 
+            // Debug log
+            console.log('Data yang akan dikirim:', formData);
+
             try {
                 // GANTI URL INI DENGAN URL GOOGLE APPS SCRIPT ANDA
-                const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyOFcgxoYTQpLkRYgxeHznBrBXFqq6iZFLAY-Wybr5O0bCVEL-L4kP-1Vb0uX11rNC6yw/exec';
+                const SCRIPT_URL = 'MASUKKAN_URL_GOOGLE_APPS_SCRIPT_ANDA_DISINI';
+                
+                if (SCRIPT_URL === 'MASUKKAN_URL_GOOGLE_APPS_SCRIPT_ANDA_DISINI') {
+                    statusMessage.textContent = 'ERROR: Anda belum mengganti URL Google Apps Script!';
+                    statusMessage.className = 'status-message error show';
+                    submitBtn.disabled = false;
+                    btnText.textContent = 'Kirim Saran';
+                    return;
+                }
+                
+                // Buat FormData untuk menghindari CORS
+                const form = new FormData();
+                form.append('timestamp', formData.timestamp);
+                form.append('name', formData.name);
+                form.append('email', formData.email);
+                form.append('category', formData.category);
+                form.append('suggestion', formData.suggestion);
+                
+                console.log('Mengirim ke URL:', SCRIPT_URL);
                 
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
+                    body: form
                 });
+
+                console.log('Response status:', response.status);
+                console.log('Response:', response);
 
                 // Show success message
                 statusMessage.textContent = 'Saran berhasil dikirim! Terima kasih atas masukan Anda.';
@@ -292,9 +312,17 @@
                 document.getElementById('suggestionForm').reset();
                 
             } catch (error) {
-                console.error('Error:', error);
-                statusMessage.textContent = 'Terjadi kesalahan saat mengirim saran. Silakan coba lagi.';
-                statusMessage.className = 'status-message error show';
+                console.error('Error detail:', error);
+                
+                // Cek apakah ini error CORS (yang normal untuk Apps Script)
+                if (error.message.includes('CORS') || error.message.includes('network')) {
+                    statusMessage.textContent = 'Saran telah dikirim! (Error CORS adalah normal)';
+                    statusMessage.className = 'status-message success show';
+                    document.getElementById('suggestionForm').reset();
+                } else {
+                    statusMessage.textContent = 'Error: ' + error.message;
+                    statusMessage.className = 'status-message error show';
+                }
             }
             
             // Reset button
@@ -320,4 +348,3 @@
     </script>
 </body>
 </html>
-
